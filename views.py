@@ -1,7 +1,9 @@
 from route_helper import simple_route
 
+inventory = ["Rope", "Lantern", "Sword"]
+
 GAME_HEADER = """
-<h1>Welcome to adventure quest!</h1>
+<h1>Legend of Blah: Blahcarina of Blah</h1>
 <p>At any time you can <a href='/reset/'>reset</a> your game.</p>
 """
 
@@ -15,6 +17,7 @@ def hello(world: dict) -> str:
     :return: The HTML to show the player
     """
     return GAME_HEADER+"""You are in the Lair of the Corgis.<br>
+    Your inventory: {inventory[0]}, {inventory[1]}, {inventory[2]}<br>
     
     <a href="goto/lair">Go further into the lair.</a><br>
     <a href="goto/entrance">Retreat.</a>"""
@@ -51,6 +54,20 @@ def open_door(world: dict, where: str) -> str:
     return GAME_HEADER+ENCOUNTER_MONSTER.format(where)
 
 
+@simple_route('/keep_going/<where>/')
+def blah(world: dict, where: str) -> str:
+    """
+    Update the player location and encounter a monster, prompting the player
+    to give them a name.
+
+    :param world: The current world
+    :param where: The new location to move to
+    :return: The HTML to show the player
+    """
+    world['location'] = where
+    return GAME_HEADER+ENCOUNTER_MONSTER.format(where)
+
+
 @simple_route("/save/name/")
 def save_name(world: dict, monsters_name: str) -> str:
     """
@@ -61,8 +78,7 @@ def save_name(world: dict, monsters_name: str) -> str:
     :return:
     """
     world['name'] = monsters_name
-
-    return GAME_HEADER+"""You are in {where}, and you are nearby {monster_name}
-    <br><br>
+    return GAME_HEADER+"""You are in {where}, and you are nearby {monster_name}<br>
+    <a href='keep_going/more_lair'Move further into the lair'</a>
     <a href='/'>Return to the start</a>
     """.format(where=world['location'], monster_name=world['name'])
