@@ -1,9 +1,13 @@
 from route_helper import simple_route
 
+inventory = ["Rope", "Lantern", "Potion"]
+weapons = "Sword"
+
 GAME_HEADER = """
 <h1>Legend of Blah: Blahcarina of Blah</h1>
-<p>At any time you can <a href='/reset/'>reset</a> your game.</p>
-"""
+<p>Your Inventory: {item1}, {item2}, {item3}</p>
+<o>Your Weapon: {weapon}</p>
+""".format(item1=inventory[0], item2=inventory[1], item3=inventory[2], weapon = weapons)
 
 
 @simple_route('/')
@@ -14,12 +18,10 @@ def hello(world: dict) -> str:
     :param world: The current world
     :return: The HTML to show the player
     """
-    inventory = "Rope"
+
     return GAME_HEADER+"""You come across a dark cave.<br>
-    You have a {inventory} in your inventory<br>
-    
-    <a href="goto/cave">Enter the cave.</a><br>
-    <a href="goto/entrance">Retreat.</a>"""
+    <a href="goto/cave">Enter the cave</a><br>
+    """
 
 
 CAVE_ENTER = """
@@ -46,16 +48,6 @@ ENCOUNTER_MONSTER = """
 <!-- Curly braces let us inject values into the string -->
 You are in {}. You found a monster!<br>
 
-<!-- Image taken from site that generates random Corgi pictures-->
-<img src="http://placecorgi.com/260/180" /><br>
-    
-What is its name?
-
-<!-- Form allows you to have more text entry -->    
-<form action="/save/name/">
-    <input type="text" name="player"><br>
-    <input type="submit" value="Submit"><br>
-</form>
 """
 
 
@@ -76,17 +68,3 @@ def open_door(world: dict, where: str) -> str:
     elif where == "right":
         return GAME_HEADER+GONE_RIGHT
 
-
-@simple_route("/save/name/")
-def save_name(world: dict, monsters_name: str) -> str:
-    """
-    Update the name of the monster.
-
-    :param world: The current world
-    :param monsters_name:
-    :return:
-    """
-    world['name'] = monsters_name
-    return GAME_HEADER+"""You are in {where}, and you are nearby {monster_name}<br>
-    <a href='/'>Return to the start</a>
-    """.format(where=world['location'], monster_name=world['name'])
