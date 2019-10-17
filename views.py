@@ -1,17 +1,23 @@
 from route_helper import simple_route
+from route_helper import INITIAL_WORLD
 import random
 
-character = {"name": "Lonk", "total_hp": 20, "current_hp": "20", "def": 8, "exp": 0, "lvl": 1}
-inventory = ["Rope", "Lantern", "Potion"]
-weapons = "Sword"
-
 GAME_HEADER = """
-<h1>Legend of Zolda: Parody of Time</h1>
-Your Inventory: {item1}, {item2}, {item3}<br>
-Your Weapon: {weapon}<br>
-Your HP: {current_hp}/{total_hp}<p>
-""".format(item1=inventory[0], item2=inventory[1], item3=inventory[2], weapon=weapons,
-           current_hp=character["current_hp"], total_hp=character["total_hp"])
+<h1>Legend of Zolda: Majora's Flask</h1>
+HP: {current_hp}/{total_hp}<br>
+Level: {level}<br>
+EXP: {experience}<p>
+Inventory:<br>
+........Slot One: {item1}<br>
+........Slot Two: {item2}<br>
+........Slot Three: {item3}<br>
+........Slot Four: {item4}<p>
+Weapon: {weapon}<p>
+************<p>
+""".format(item1=INITIAL_WORLD["inventory_slot_one"], item2=INITIAL_WORLD["inventory_slot_two"],
+           item3=INITIAL_WORLD["inventory_slot_three"], item4=INITIAL_WORLD["inventory_slot_four"],
+           weapon=INITIAL_WORLD["weapons"], current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+           experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"])
 
 
 @simple_route('/')
@@ -50,22 +56,6 @@ Where will you go?<p>
     
 """
 
-GONE_LEFT = """
-Once you head down the left path, you come across a monster.<p>
-<a href='/'>Return to the start</a>
-"""
-
-GONE_RIGHT = """
-You have gone right<p>
-<a href='/'>Return to the start</a>
-"""
-
-ENCOUNTER_MONSTER = """
-<!-- Curly braces let us inject values into the string -->
-You are in {}. You found a monster!<br>
-
-"""
-
 
 @simple_route('/goto/<where>/')
 def open_door(world: dict, where: str) -> str:
@@ -81,16 +71,23 @@ def open_door(world: dict, where: str) -> str:
         return GAME_HEADER+FOREST_ENTER
     elif where == "give_up":
         return GAME_HEADER+GIVE_UP
-    elif where == "left":
-        return GAME_HEADER+GONE_LEFT
-    elif where == "right":
-        return GAME_HEADER+GONE_RIGHT
+
+
+@simple_route("/first_turn/<current_monster>/")
+def first_turn(world: dict, current_monster: dict):
+    return GAME_HEADER + """
+    You approach the {current_monster}.<p>
+    What will you do?<p>
+    <a href="/attack/">Attack</a><br>
+    <a href="/heal/">Heal</a><br>
+    <a href="/flee/">Flee</a><br>
+    """.format(current_monster=current_monster)
 
 
 @simple_route("/attack/")
 def attack(world: dict, current_monster: dict):
     damage = 0
-    if weapons == "sword":
+    if INITIAL_WORLD["weapons"] == "sword":
         damage = random.randrange(4, 7)
         damage = damage - (current_monster["def"]/2)
     return damage
@@ -98,9 +95,9 @@ def attack(world: dict, current_monster: dict):
 
 @simple_route("/heal/")
 def heal(world: dict):
-    if "Potion" in inventory and character["current_hp"] < character["total_hp"]:
-        character["current_hp"] = character["current_hp"] + 10
-        inventory.remove(inventory[2])
+    if INITIAL_WORLD["inventory_slot_one"] == "Potion":
+        INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] + 10
+        INITIAL_WORLD["inventory_slot_one"] = "Empty"
         return GAME_HEADER + """Healed 10 HP!
                 <a href="/goto/forest/">Enter the forest</a><br>
         """
@@ -148,14 +145,12 @@ def generate_monster(world: dict, where: str) -> str:
     if where == "left":
         return GAME_HEADER + """You have gone left and found a {name}.<p>
                              What will you do?<p>
-                             <a href="/attack/">Attack</a><br>
-                             <a href="/heal/">Heal</a><br>
-                             <a href="/flee/">Flee</a><br>
+                             <a href="/first_turn/{name}/">Engage in Battle</a><br>
+                             <a href="/flee/">Try to Run</a><br>
                              """.format(name=current_monster["name"])
     elif where == "right":
         return GAME_HEADER + """You have gone right and found a {name}.<p>
                              What will you do?<p>
-                             <a href="/attack/">Attack</a><br>
-                             <a href="/heal/">Heal</a><br>
-                             <a href="/flee/">Flee</a><br>
+                             <a href="/attack/">Engage in Battle</a><br>
+                             <a href="/flee/">Try to Run</a><br>
                              """.format(name=current_monster["name"])

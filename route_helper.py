@@ -13,7 +13,17 @@ from flask import request, session, redirect
 
 from app import app
 
-INITIAL_WORLD = {}
+INITIAL_WORLD = {"current_hp": 20,
+                 "total_hp": 20,
+                 "def": 8,
+                 "exp": 0,
+                 "lvl": 1,
+                 "inventory_slot_one": "Rope",
+                 "inventory_slot_two": "Lantern",
+                 "inventory_slot_three": "Potion",
+                 "inventory_slot_four": "Empty",
+                 "weapons": "Sword"
+                 }
 
 
 def simple_route(path: str, **options):
@@ -48,6 +58,6 @@ def reset():
     the root page.
     :return: Redirection to '/'
     """
-    session['world'] = "{}"
+    session['world'] = json.dumps(INITIAL_WORLD)
     return redirect('/')
 
