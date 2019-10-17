@@ -1,7 +1,6 @@
 from route_helper import simple_route
 from route_helper import INITIAL_WORLD
 import random
-from PIL import Image
 
 GAME_HEADER = """
 <h1>Legend of Zolda: Majora's Flask</h1>
@@ -74,29 +73,30 @@ def open_door(world: dict, where: str) -> str:
         return GAME_HEADER+GIVE_UP
 
 
-@simple_route("/first_turn/<current_monster>/")
-def first_turn(world: dict, current_monster: dict):
+@simple_route("/first_turn/<current_monster>/<hp>/<atk>/<exp>/")
+def first_turn(world: dict, current_monster: str, hp: int, atk: int, exp: int):
     return GAME_HEADER + """
     You approach the {current_monster}.<p>
     What will you do?<p>
-    <a href="/attack/">Attack</a><br>
+    <a href="/attack/{current_monster}/{hp}/{atk}/{exp}/">Attack</a><br>
     <a href="/heal/">Heal</a><br>
     <a href="/flee/">Flee</a><br>
-    """.format(current_monster=current_monster)
+    """.format(current_monster=current_monster, hp=hp, atk=atk, exp=exp)
 
 
 @simple_route("/battle/<current_monster>/")
-def battle(world: dict, current_monster: dict):
+def battle(world: dict, current_monster: str):
     pass
 
 
-@simple_route("/attack/")
-def attack(world: dict, current_monster: dict):
-    damage = 0
-    if INITIAL_WORLD["weapons"] == "sword":
+@simple_route("/attack/<current_monster>/<hp>/<atk>/<exp>")
+def attack(world: dict, current_monster: str, hp: int, atk: int, exp: int):
+    if INITIAL_WORLD["weapons"] == "Sword":
         damage = random.randrange(4, 7)
-        damage = damage - (current_monster["def"]/2)
-    return damage
+        return GAME_HEADER + """
+        You attack the {current_monster}, and {current_monster} takes {damage} damage!<br>
+        <a href="/battle/{current_monster}/">Continue battle</a>
+        """.format(current_monster=current_monster, damage=damage)
 
 
 @simple_route("/heal/")
@@ -129,170 +129,203 @@ def flee(world: dict):
 @simple_route("/generate/monster/<where>/")
 def generate_monster(world: dict, where: str) -> str:
     monster_number = random.randrange(1, 10)
-    current_monster = {}
+    current_monster = ""
+    monster_hp = 0
+    monster_atk = 0
+    monster_exp_drop = 0
     if monster_number == 1:
-        current_monster = {"name": "Gel-O", "hp": 7, "atk": 4, "def": 1, "exp_drop": 3}
+        current_monster = "Gel-O"
+        monster_hp = 7
+        monster_atk = 4
+        monster_exp_drop = 3
     elif monster_number == 2:
-        current_monster = {"name": "Beehat", "hp": 12, "atk": 6, "def": 3, "exp_drop": 5}
+        current_monster = "Beehat"
+        monster_hp = 12
+        monster_atk = 6
+        monster_exp_drop = 5
     elif monster_number == 3:
-        current_monster = {"name": "Socktorok", "hp": 15, "atk": 5, "def": 4, "exp_drop": 6}
+        current_monster = "Socktorok"
+        monster_hp = 15
+        monster_atk = 5
+        monster_exp_drop = 6
     elif monster_number == 4:
-        current_monster = {"name": "Beever", "hp": 8, "atk": 3, "def": 2, "exp_drop": 4}
+        current_monster = "Beever"
+        monster_hp = 8
+        monster_atk = 3
+        monster_exp_drop = 4
     elif monster_number == 5:
-        current_monster = {"name": "Dinofloss", "hp": 14, "atk": 7, "def": 4, "exp_drop": 8}
+        current_monster = "Dinofloss"
+        monster_hp = 14
+        monster_atk = 7
+        monster_exp_drop = 8
     elif monster_number == 6:
-        current_monster = {"name": "Wolfy", "hp": 18, "atk": 8, "def": 5, "exp_drop": 10}
+        current_monster = "Wolfy"
+        monster_hp = 18
+        monster_atk = 8
+        monster_exp_drop = 10
     elif monster_number == 7:
-        current_monster = {"name": "Dingdongo", "hp": 17, "atk": 7, "def": 9, "exp_drop": 12}
+        current_monster = "Dingdongo"
+        monster_hp = 17
+        monster_atk = 7
+        monster_exp_drop = 12
     elif monster_number == 8:
-        current_monster = {"name": "Key", "hp": 6, "atk": 3, "def": 1, "exp_drop": 2}
+        current_monster = "Key"
+        monster_hp = 6
+        monster_atk = 3
+        monster_exp_drop = 2
     elif monster_number == 9:
-        current_monster = {"name": "Wizzo", "hp": 10, "atk": 7, "def": 3, "exp_drop": 8}
+        current_monster = "Wizzo"
+        monster_hp = 10
+        monster_atk = 7
+        monster_exp_drop = 8
     world['monster'] = current_monster
+    world['monster_hp'] = monster_hp
+    world['monster_atk'] = monster_atk
+    world['monster_exp_drop'] = monster_exp_drop
     world['location'] = where
     if where == "left":
         if monster_number == 1:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                               <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/95c81da5-abd3-499e-bb71-a32be4435115/d38yzcn-be11f801-06e2-4d96-bd13-483c1493b971.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk1YzgxZGE1LWFiZDMtNDk5ZS1iYjcxLWEzMmJlNDQzNTExNVwvZDM4eXpjbi1iZTExZjgwMS0wNmUyLTRkOTYtYmQxMy00ODNjMTQ5M2I5NzEucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.6yDXL-r4fgQwWe3JJk2z5jxZAk0NVIDEPy2VD-hUZhw"
-                               width="300" height="250"/><br>
-                               What will you do?<p>
-                               <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                               <a href="/flee/">Try to Run</a><br>
-                               """.format(name=current_monster["name"])
+            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/95c81da5-abd3-499e-bb71-a32be4435115/d38yzcn-be11f801-06e2-4d96-bd13-483c1493b971.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk1YzgxZGE1LWFiZDMtNDk5ZS1iYjcxLWEzMmJlNDQzNTExNVwvZDM4eXpjbi1iZTExZjgwMS0wNmUyLTRkOTYtYmQxMy00ODNjMTQ5M2I5NzEucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.6yDXL-r4fgQwWe3JJk2z5jxZAk0NVIDEPy2VD-hUZhw"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 2:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                           <img src="https://images4-g.ravelrycache.com/uploads/LuckyFoxKnits/549000002/Second_cover_small2.jpg"
-                                           width="300" height="250"/><br>
-                                           What will you do?<p>
-                                           <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                           <a href="/flee/">Try to Run</a><br>
-                                           """.format(name=current_monster["name"])
+            <img src="https://images4-g.ravelrycache.com/uploads/LuckyFoxKnits/549000002/Second_cover_small2.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 3:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                           <img src="https://images4-g.ravelrycache.com/uploads/kjbrasda/244331547/DSCF7897_small2.JPG"
-                                           width="300" height="250"/><br>
-                                           What will you do?<p>
-                                           <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                           <a href="/flee/">Try to Run</a><br>
-                                           """.format(name=current_monster["name"])
+            <img src="https://images4-g.ravelrycache.com/uploads/kjbrasda/244331547/DSCF7897_small2.JPG"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+             <a href="/flee/">Try to Run</a><br>
+             """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 4:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                                       <img src="https://img.huffingtonpost.com/asset/5cd6f6ee2100005800c86c95.jpeg?ops=scalefit_630_noupscale"
-                                                       width="300" height="300"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://img.huffingtonpost.com/asset/5cd6f6ee2100005800c86c95.jpeg?ops=scalefit_630_noupscale"
+            width="300" height="300"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 5:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                                       <img src="https://images-na.ssl-images-amazon.com/images/I/51T0TWGJYQL._SY355_.jpg"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://images-na.ssl-images-amazon.com/images/I/51T0TWGJYQL._SY355_.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 6:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                                       <img src="https://66.media.tumblr.com/f927883b6fe0f9547b063f53b02e1428/tumblr_mgs171WwBy1rwcfrqo5_250.jpg"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://66.media.tumblr.com/f927883b6fe0f9547b063f53b02e1428/tumblr_mgs171WwBy1rwcfrqo5_250.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 7:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                                       <img src="https://images-na.ssl-images-amazon.com/images/I/51QnDuSzMqL.jpg"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://images-na.ssl-images-amazon.com/images/I/51QnDuSzMqL.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 8:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                                       <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 9:
             return GAME_HEADER + """You have gone left and found a {name}.<p>
-                                                       <img src="https://www.how-to-draw-funny-cartoons.com/images/wizard-clipart-004.png"
-                                                       width="300" height="300"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://www.how-to-draw-funny-cartoons.com/images/wizard-clipart-004.png"
+            width="300" height="300"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
     elif where == "right":
         if monster_number == 1:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                               <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/95c81da5-abd3-499e-bb71-a32be4435115/d38yzcn-be11f801-06e2-4d96-bd13-483c1493b971.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk1YzgxZGE1LWFiZDMtNDk5ZS1iYjcxLWEzMmJlNDQzNTExNVwvZDM4eXpjbi1iZTExZjgwMS0wNmUyLTRkOTYtYmQxMy00ODNjMTQ5M2I5NzEucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.6yDXL-r4fgQwWe3JJk2z5jxZAk0NVIDEPy2VD-hUZhw"
-                               width="300" height="250"/><br>
-                               What will you do?<p>
-                               <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                               <a href="/flee/">Try to Run</a><br>
-                               """.format(name=current_monster["name"])
+            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/95c81da5-abd3-499e-bb71-a32be4435115/d38yzcn-be11f801-06e2-4d96-bd13-483c1493b971.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk1YzgxZGE1LWFiZDMtNDk5ZS1iYjcxLWEzMmJlNDQzNTExNVwvZDM4eXpjbi1iZTExZjgwMS0wNmUyLTRkOTYtYmQxMy00ODNjMTQ5M2I5NzEucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.6yDXL-r4fgQwWe3JJk2z5jxZAk0NVIDEPy2VD-hUZhw"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 2:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                           <img src="https://images4-g.ravelrycache.com/uploads/LuckyFoxKnits/549000002/Second_cover_small2.jpg"
-                                           width="300" height="250"/><br>
-                                           What will you do?<p>
-                                           <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                           <a href="/flee/">Try to Run</a><br>
-                                           """.format(name=current_monster["name"])
+            <img src="https://images4-g.ravelrycache.com/uploads/LuckyFoxKnits/549000002/Second_cover_small2.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 3:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                           <img src="https://images4-g.ravelrycache.com/uploads/kjbrasda/244331547/DSCF7897_small2.JPG"
-                                           width="300" height="250"/><br>
-                                           What will you do?<p>
-                                           <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                           <a href="/flee/">Try to Run</a><br>
-                                           """.format(name=current_monster["name"])
+            <img src="https://images4-g.ravelrycache.com/uploads/kjbrasda/244331547/DSCF7897_small2.JPG"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 4:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                                       <img src="https://img.huffingtonpost.com/asset/5cd6f6ee2100005800c86c95.jpeg?ops=scalefit_630_noupscale"
-                                                       width="300" height="300"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://img.huffingtonpost.com/asset/5cd6f6ee2100005800c86c95.jpeg?ops=scalefit_630_noupscale"
+            width="300" height="300"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 5:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                                       <img src="https://images-na.ssl-images-amazon.com/images/I/51T0TWGJYQL._SY355_.jpg"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://images-na.ssl-images-amazon.com/images/I/51T0TWGJYQL._SY355_.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 6:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                                       <img src="https://66.media.tumblr.com/f927883b6fe0f9547b063f53b02e1428/tumblr_mgs171WwBy1rwcfrqo5_250.jpg"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://66.media.tumblr.com/f927883b6fe0f9547b063f53b02e1428/tumblr_mgs171WwBy1rwcfrqo5_250.jpg"
+            width="300" height="250"/><br>
+             What will you do?<p>
+             <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+             <a href="/flee/">Try to Run</a><br>
+             """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 7:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                                       <img src="https://images-na.ssl-images-amazon.com/images/I/51QnDuSzMqL.jpg"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://images-na.ssl-images-amazon.com/images/I/51QnDuSzMqL.jpg"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 8:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                                       <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
-                                                       width="300" height="250"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
+            width="300" height="250"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
         elif monster_number == 9:
             return GAME_HEADER + """You have gone right and found a {name}.<p>
-                                                       <img src="https://www.how-to-draw-funny-cartoons.com/images/wizard-clipart-004.png"
-                                                       width="300" height="300"/><br>
-                                                       What will you do?<p>
-                                                       <a href="/first_turn/{name}/">Engage in Battle</a><br>
-                                                       <a href="/flee/">Try to Run</a><br>
-                                                       """.format(name=current_monster["name"])
+            <img src="https://www.how-to-draw-funny-cartoons.com/images/wizard-clipart-004.png"
+            width="300" height="300"/><br>
+            What will you do?<p>
+            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
+            <a href="/flee/">Try to Run</a><br>
+            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
