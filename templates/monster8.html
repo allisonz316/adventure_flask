@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<h1>Legend of Zolda: Majora's Flask</h1>
+HP: {{ current_hp }}/{{ total_hp }}<br>
+Level: {{ level }}<br>
+EXP: {{ experience }}<p>
+Inventory:<br>
+........Slot One: {{ item1 }}<br>
+........Slot Two: {{ item2 }}<br>
+........Slot Three: {{ item3 }}<br>
+........Slot Four: {{ item4 }}<p>
+Weapon: {{ weapon }}<p>
+************<p>
+You have gone to the {{where}} and found a {{name}}.<p>
+        <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
+        width="300" height="250"/><br>
+        What will you do?<p>
+        <a href="/first_turn/{{name}}/">Engage in Battle</a><br>
+        <a href="/flee/{{name}}/">Try to Run</a><br>
+
+</body>
+</html>

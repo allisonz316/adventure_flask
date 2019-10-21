@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<h1>Legend of Zolda: Majora's Flask</h1>
+HP: {{ current_hp }}/{{ total_hp }}<br>
+Level: {{ level }}<br>
+EXP: {{ experience }}<p>
+Inventory:<br>
+........Slot One: {{ item1 }}<br>
+........Slot Two: {{ item2 }}<br>
+........Slot Three: {{ item3 }}<br>
+........Slot Four: {{ item4 }}<p>
+Weapon: {{ weapon }}<p>
+************<p>
+{{ current_monster }} seems angry.<p>
+    What will you do?<p>
+    <a href="/attack/{{current_monster}}/">Attack</a><br>
+    <a href="/heal/{{current_monster}}/">Heal</a><br>
+    <a href="/flee/{{current_monster}}/">Flee</a><br>
+
+</body>
+</html>

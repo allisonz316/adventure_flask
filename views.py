@@ -1,23 +1,7 @@
 from route_helper import simple_route
 from route_helper import INITIAL_WORLD
+from flask import render_template
 import random
-
-GAME_HEADER = """
-<h1>Legend of Zolda: Majora's Flask</h1>
-HP: {current_hp}/{total_hp}<br>
-Level: {level}<br>
-EXP: {experience}<p>
-Inventory:<br>
-........Slot One: {item1}<br>
-........Slot Two: {item2}<br>
-........Slot Three: {item3}<br>
-........Slot Four: {item4}<p>
-Weapon: {weapon}<p>
-************<p>
-""".format(item1=INITIAL_WORLD["inventory_slot_one"], item2=INITIAL_WORLD["inventory_slot_two"],
-           item3=INITIAL_WORLD["inventory_slot_three"], item4=INITIAL_WORLD["inventory_slot_four"],
-           weapon=INITIAL_WORLD["weapons"], current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
-           experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"])
 
 
 @simple_route('/')
@@ -28,33 +12,11 @@ def hello(world: dict) -> str:
     :param world: The current world
     :return: The HTML to show the player
     """
-
-    return GAME_HEADER+"""Your name is Lonk, a completely original fantasy hero on a quest to save Zolda, a completely 
-    original fantasy princess, from Gonandarf, a completely original fantasy villain. Your completely original fantasy 
-    travels have first brought you to the edge of a dark, spooky forest.<p>
-    What will you do?<p>
-    <img src="https://wallpaperaccess.com/full/96689.jpg"
-    width="350" height="250"/><br>
-    <a href="goto/forest">Enter the forest</a><br>
-    <a href="goto/give_up">Give up</a>
-    """
-
-
-GIVE_UP = """
-You've...given up. Uh...okay. Not really sure why you decided to do that...but...I guess we're done here, then.<p>
-...bye.<p>
-<a href = "/">Retry?</a>
-"""
-
-FOREST_ENTER = """
-Upon entering the forest, you see two paths in front of you.<p>
-    
-Where will you go?<p>
-    
-<a href="/generate/monster/left/">Left path</a><br>
-<a href="/generate/monster/right/">Right path</a>
-    
-"""
+    return render_template("index.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                           item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                           item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                           current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                           experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"])
 
 
 @simple_route('/goto/<where>/')
@@ -68,62 +30,176 @@ def open_door(world: dict, where: str) -> str:
     """
     world['location'] = where
     if where == "forest":
-        return GAME_HEADER+FOREST_ENTER
+        return render_template("enter_forest.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"])
     elif where == "give_up":
-        return GAME_HEADER+GIVE_UP
+        return render_template("give_up.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"])
 
 
-@simple_route("/first_turn/<current_monster>/<hp>/<atk>/<exp>/")
-def first_turn(world: dict, current_monster: str, hp: int, atk: int, exp: int):
-    return GAME_HEADER + """
-    You approach the {current_monster}.<p>
-    What will you do?<p>
-    <a href="/attack/{current_monster}/{hp}/{atk}/{exp}/">Attack</a><br>
-    <a href="/heal/">Heal</a><br>
-    <a href="/flee/">Flee</a><br>
-    """.format(current_monster=current_monster, hp=hp, atk=atk, exp=exp)
+@simple_route("/your_turn/<current_monster>/")
+def your_turn(world: dict, current_monster: str):
+    return render_template("your_turn.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                           item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                           item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                           current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                           experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], current_monster=current_monster)
+
+
+@simple_route("/first_turn/<current_monster>/")
+def first_turn(world: dict, current_monster: str):
+    return render_template("first_turn.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                           item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                           item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                           current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                           experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], current_monster=current_monster)
 
 
 @simple_route("/battle/<current_monster>/")
 def battle(world: dict, current_monster: str):
-    pass
+    if world["monster_hp"] <= 0:
+        INITIAL_WORLD["exp"] = INITIAL_WORLD["exp"] + world["monster_exp_drop"]
+        INITIAL_WORLD["current_hp"] = INITIAL_WORLD["total_hp"]
+        if INITIAL_WORLD["exp"] >= 50:
+            INITIAL_WORLD["lvl"] = INITIAL_WORLD["lvl"] + 1
+            INITIAL_WORLD["exp"] = INITIAL_WORLD["exp"] - 50
+            INITIAL_WORLD["total_hp"] = INITIAL_WORLD["total_hp"] + 5
+            INITIAL_WORLD["current_hp"] = INITIAL_WORLD["total_hp"]
+            INITIAL_WORLD["def"] = INITIAL_WORLD["def"] + 1
+            return render_template("battle_victory_level_up.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"],
+                                   item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster, exp=world["monster_exp_drop"])
+        else:
+            return render_template("battle_victory.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster, exp=world["monster_exp_drop"])
+    else:
+        atk = world["monster_atk"] - 2
+        atk2 = world["monster_atk"] + 1
+        damage = random.randrange(atk, atk2)
+        INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] - damage
+        return render_template("monster_turn.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                               current_monster=current_monster, damage=damage, hp=INITIAL_WORLD["current_hp"])
 
 
-@simple_route("/attack/<current_monster>/<hp>/<atk>/<exp>")
-def attack(world: dict, current_monster: str, hp: int, atk: int, exp: int):
+@simple_route("/attack/<current_monster>/")
+def attack(world: dict, current_monster: str):
     if INITIAL_WORLD["weapons"] == "Sword":
         damage = random.randrange(4, 7)
-        return GAME_HEADER + """
-        You attack the {current_monster}, and {current_monster} takes {damage} damage!<br>
-        <a href="/battle/{current_monster}/">Continue battle</a>
-        """.format(current_monster=current_monster, damage=damage)
+        world["monster_hp"] = world["monster_hp"] - damage
+        return render_template("attack.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                               current_monster=current_monster, damage=damage, hp=world["monster_hp"])
 
 
-@simple_route("/heal/")
-def heal(world: dict):
-    if INITIAL_WORLD["inventory_slot_one"] == "Potion":
-        INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] + 10
-        INITIAL_WORLD["inventory_slot_one"] = "Empty"
-        return GAME_HEADER + """Healed 10 HP!
-                <a href="/goto/forest/">Enter the forest</a><br>
-        """
+@simple_route("/heal/<current_monster>/")
+def heal(world: dict, current_monster: str):
+    if INITIAL_WORLD["current_hp"] < INITIAL_WORLD["total_hp"]:
+        if INITIAL_WORLD["inventory_slot_one"] == "Potion":
+            INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] + 10
+            if INITIAL_WORLD["current_hp"] > INITIAL_WORLD["total_hp"]:
+                INITIAL_WORLD["current_hp"] = INITIAL_WORLD["total_hp"]
+            INITIAL_WORLD["inventory_slot_one"] = "Empty"
+            return render_template("heal.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"],
+                                   item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster)
+        elif INITIAL_WORLD["inventory_slot_two"] == "Potion":
+            INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] + 10
+            if INITIAL_WORLD["current_hp"] > INITIAL_WORLD["total_hp"]:
+                INITIAL_WORLD["current_hp"] = INITIAL_WORLD["total_hp"]
+            INITIAL_WORLD["inventory_slot_two"] = "Empty"
+            return render_template("heal.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"],
+                                   item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster)
+        elif INITIAL_WORLD["inventory_slot_three"] == "Potion":
+            INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] + 10
+            if INITIAL_WORLD["current_hp"] > INITIAL_WORLD["total_hp"]:
+                INITIAL_WORLD["current_hp"] = INITIAL_WORLD["total_hp"]
+            INITIAL_WORLD["inventory_slot_three"] = "Empty"
+            return render_template("heal.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"],
+                                   item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster)
+        elif INITIAL_WORLD["inventory_slot_four"] == "Potion":
+            INITIAL_WORLD["current_hp"] = INITIAL_WORLD["current_hp"] + 10
+            if INITIAL_WORLD["current_hp"] > INITIAL_WORLD["total_hp"]:
+                INITIAL_WORLD["current_hp"] = INITIAL_WORLD["total_hp"]
+            INITIAL_WORLD["inventory_slot_four"] = "Empty"
+            return render_template("heal.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"],
+                                   item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster)
+        else:
+            return render_template("heal_fail1.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                                   item2=INITIAL_WORLD["inventory_slot_two"],
+                                   item3=INITIAL_WORLD["inventory_slot_three"],
+                                   item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                                   current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                                   experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                                   current_monster=current_monster)
     else:
-        return GAME_HEADER + """Couldn't heal!
-                <a href="/goto/forest/">Enter the forest</a><br>
-        """
+        return render_template("heal_fail2.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"],
+                               item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                               current_monster=current_monster)
 
 
-@simple_route("/flee/")
-def flee(world: dict):
+@simple_route("/flee/<current_monster>/")
+def flee(world: dict, current_monster: str):
     flee_chance = random.randrange(1, 11)
     if flee_chance >= 7:
-        return GAME_HEADER + """Successfully fled!<br>
-                <a href="/goto/forest/">Enter the forest</a><br>
-        """
+        return render_template("flee_success.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"],
+                               item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                               current_monster=current_monster)
     else:
-        return GAME_HEADER + """Couldn't flee!
-                <a href="/goto/forest/">Enter the forest</a><br>
-        """
+        return render_template("flee_fail.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"],
+                               item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"],
+                               current_monster=current_monster)
 
 
 @simple_route("/generate/monster/<where>/")
@@ -178,154 +254,71 @@ def generate_monster(world: dict, where: str) -> str:
         monster_hp = 10
         monster_atk = 7
         monster_exp_drop = 8
-    world['monster'] = current_monster
-    world['monster_hp'] = monster_hp
-    world['monster_atk'] = monster_atk
-    world['monster_exp_drop'] = monster_exp_drop
-    world['location'] = where
-    if where == "left":
-        if monster_number == 1:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/95c81da5-abd3-499e-bb71-a32be4435115/d38yzcn-be11f801-06e2-4d96-bd13-483c1493b971.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk1YzgxZGE1LWFiZDMtNDk5ZS1iYjcxLWEzMmJlNDQzNTExNVwvZDM4eXpjbi1iZTExZjgwMS0wNmUyLTRkOTYtYmQxMy00ODNjMTQ5M2I5NzEucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.6yDXL-r4fgQwWe3JJk2z5jxZAk0NVIDEPy2VD-hUZhw"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 2:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://images4-g.ravelrycache.com/uploads/LuckyFoxKnits/549000002/Second_cover_small2.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 3:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://images4-g.ravelrycache.com/uploads/kjbrasda/244331547/DSCF7897_small2.JPG"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-             <a href="/flee/">Try to Run</a><br>
-             """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 4:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://img.huffingtonpost.com/asset/5cd6f6ee2100005800c86c95.jpeg?ops=scalefit_630_noupscale"
-            width="300" height="300"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 5:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://images-na.ssl-images-amazon.com/images/I/51T0TWGJYQL._SY355_.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 6:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://66.media.tumblr.com/f927883b6fe0f9547b063f53b02e1428/tumblr_mgs171WwBy1rwcfrqo5_250.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 7:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://images-na.ssl-images-amazon.com/images/I/51QnDuSzMqL.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 8:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 9:
-            return GAME_HEADER + """You have gone left and found a {name}.<p>
-            <img src="https://www.how-to-draw-funny-cartoons.com/images/wizard-clipart-004.png"
-            width="300" height="300"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-    elif where == "right":
-        if monster_number == 1:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/95c81da5-abd3-499e-bb71-a32be4435115/d38yzcn-be11f801-06e2-4d96-bd13-483c1493b971.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzk1YzgxZGE1LWFiZDMtNDk5ZS1iYjcxLWEzMmJlNDQzNTExNVwvZDM4eXpjbi1iZTExZjgwMS0wNmUyLTRkOTYtYmQxMy00ODNjMTQ5M2I5NzEucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.6yDXL-r4fgQwWe3JJk2z5jxZAk0NVIDEPy2VD-hUZhw"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 2:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://images4-g.ravelrycache.com/uploads/LuckyFoxKnits/549000002/Second_cover_small2.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 3:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://images4-g.ravelrycache.com/uploads/kjbrasda/244331547/DSCF7897_small2.JPG"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 4:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://img.huffingtonpost.com/asset/5cd6f6ee2100005800c86c95.jpeg?ops=scalefit_630_noupscale"
-            width="300" height="300"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 5:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://images-na.ssl-images-amazon.com/images/I/51T0TWGJYQL._SY355_.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 6:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://66.media.tumblr.com/f927883b6fe0f9547b063f53b02e1428/tumblr_mgs171WwBy1rwcfrqo5_250.jpg"
-            width="300" height="250"/><br>
-             What will you do?<p>
-             <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-             <a href="/flee/">Try to Run</a><br>
-             """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 7:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://images-na.ssl-images-amazon.com/images/I/51QnDuSzMqL.jpg"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 8:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://vignette.wikia.nocookie.net/clubpenguin/images/e/ea/7126_icon.png/revision/latest?cb=20121004074608"
-            width="300" height="250"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
-        elif monster_number == 9:
-            return GAME_HEADER + """You have gone right and found a {name}.<p>
-            <img src="https://www.how-to-draw-funny-cartoons.com/images/wizard-clipart-004.png"
-            width="300" height="300"/><br>
-            What will you do?<p>
-            <a href="/first_turn/{name}/{hp}/{atk}/{exp}">Engage in Battle</a><br>
-            <a href="/flee/">Try to Run</a><br>
-            """.format(name=current_monster, hp=monster_hp, atk=monster_atk, exp=monster_exp_drop)
+    world["monster"] = current_monster
+    world["monster_hp"] = monster_hp
+    world["monster_atk"] = monster_atk
+    world["monster_exp_drop"] = monster_exp_drop
+    world["location"] = where
+    if monster_number == 1:
+        return render_template("monster1.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 2:
+        return render_template("monster2.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 3:
+        return render_template("monster3.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 4:
+        return render_template("monster4.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 5:
+        return render_template("monster5.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 6:
+        return render_template("monster6.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 7:
+        return render_template("monster7.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 8:
+        return render_template("monster8.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
+    elif monster_number == 9:
+        return render_template("monster9.html", item1=INITIAL_WORLD["inventory_slot_one"],
+                               item2=INITIAL_WORLD["inventory_slot_two"], item3=INITIAL_WORLD["inventory_slot_three"],
+                               item4=INITIAL_WORLD["inventory_slot_four"], weapon=INITIAL_WORLD["weapons"],
+                               current_hp=INITIAL_WORLD["current_hp"], total_hp=INITIAL_WORLD["total_hp"],
+                               experience=INITIAL_WORLD["exp"], level=INITIAL_WORLD["lvl"], name=current_monster,
+                               where=where)
