@@ -55,11 +55,21 @@ def open_door(world: dict, where: str) -> str:
 
 @simple_route("/your_turn/<current_monster>/")
 def your_turn(world: dict, current_monster: str):
-    return render_template("your_turn.html", item1=world["inventory_one"],
-                           item2=world["inventory_two"], item3=world["inventory_three"],
-                           item4=world["inventory_four"], weapon=world["weapon"],
-                           current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
-                           experience=world["character_exp"], level=world["character_lvl"], current_monster=current_monster)
+    if world["character_current_hp"] <= 0:
+        if world["character_current_hp"] < 0:
+            world["character_current_hp"] = 0
+        return render_template("game_over.html", item1=world["inventory_one"],
+                               item2=world["inventory_two"], item3=world["inventory_three"],
+                               item4=world["inventory_four"], weapon=world["weapon"],
+                               current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                               experience=world["character_exp"], level=world["character_lvl"])
+    else:
+        return render_template("your_turn.html", item1=world["inventory_one"],
+                               item2=world["inventory_two"], item3=world["inventory_three"],
+                               item4=world["inventory_four"], weapon=world["weapon"],
+                               current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                               experience=world["character_exp"], level=world["character_lvl"],
+                               current_monster=current_monster)
 
 
 @simple_route("/first_turn/<current_monster>/")
@@ -101,6 +111,8 @@ def battle(world: dict, current_monster: str):
         atk2 = world["monster_atk"] + 1
         damage = random.randrange(atk, atk2)
         world["character_current_hp"] = world["character_current_hp"] - damage
+        if world["character_current_hp"] < 0:
+            world["character_current_hp"] = 0
         return render_template("monster_turn.html", item1=world["inventory_one"],
                                item2=world["inventory_two"], item3=world["inventory_three"],
                                item4=world["inventory_four"], weapon=world["weapon"],
