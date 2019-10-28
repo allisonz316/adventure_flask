@@ -63,6 +63,59 @@ def open_door(world: dict, where: str) -> str:
                                item4=world["inventory_four"], weapon=world["weapon"],
                                current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
                                experience=world["character_exp"], level=world["character_lvl"])
+    elif where == "deep forest":
+        return render_template("deep_forest.html", item1=world["inventory_one"],
+                               item2=world["inventory_two"], item3=world["inventory_three"],
+                               item4=world["inventory_four"], weapon=world["weapon"],
+                               current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                               experience=world["character_exp"], level=world["character_lvl"], where=world["location"])
+    elif where == "lake island":
+        return render_template("lake_island.html", item1=world["inventory_one"],
+                               item2=world["inventory_two"], item3=world["inventory_three"],
+                               item4=world["inventory_four"], weapon=world["weapon"],
+                               current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                               experience=world["character_exp"], level=world["character_lvl"], where=world["location"])
+
+
+@simple_route("/chest/<item>/")
+def open_chest(world: dict, item: str):
+    if world["location"] == "clearing":
+        world["location"] = "deep forest"
+    elif world["location"] == "lake":
+        world["location"] = "lake island"
+    if world["inventory_one"] == "Empty":
+        world["inventory_one"] = item
+    elif world["inventory_two"] == "Empty":
+        world["inventory_two"] = item
+    elif world["inventory_three"] == "Empty":
+        world["inventory_three"] = item
+    elif world["inventory_four"] == "Empty":
+        world["inventory_four"] = item
+    else:
+        return render_template("inventory_full.html", item1=world["inventory_one"],
+                               item2=world["inventory_two"], item3=world["inventory_three"],
+                               item4=world["inventory_four"], weapon=world["weapon"],
+                               current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                               experience=world["character_exp"], level=world["character_lvl"], item=item,
+                               where=world["location"])
+    return render_template("chest.html", item1=world["inventory_one"],
+                           item2=world["inventory_two"], item3=world["inventory_three"],
+                           item4=world["inventory_four"], weapon=world["weapon"],
+                           current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                           experience=world["character_exp"], level=world["character_lvl"], item=item,
+                           where=world["location"])
+
+
+@simple_route("/swap/<slot>/<item>/")
+def item_swap(world: dict, slot: str, item: str):
+    if slot == "one":
+        world["inventory_one"] = item
+    elif slot == "two":
+        world["inventory_two"] = item
+    elif slot == "three":
+        world["inventory_three"] = item
+    elif slot == "four":
+        world["inventory_four"] = item
 
 
 @simple_route("/your_turn/<current_monster>/")
@@ -97,9 +150,9 @@ def first_turn(world: dict, current_monster: str):
 def battle(world: dict, current_monster: str):
     if world["monster_hp"] <= 0:
         if world["location"] == "left":
-            where = "clearing"
+            world["location"] = "clearing"
         elif world["location"] == "right":
-            where = "lake"
+            world["location"] = "lake"
         world["character_exp"] = world["character_exp"] + world["monster_exp_drop"]
         world["character_current_hp"] = world["character_total_hp"]
         if world["character_exp"] >= 50:
@@ -115,7 +168,7 @@ def battle(world: dict, current_monster: str):
                                    current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
                                    experience=world["character_exp"], level=world["character_lvl"],
                                    current_monster=current_monster, exp=world["monster_exp_drop"],
-                                   where=where)
+                                   where=world["location"])
         else:
             return render_template("battle_victory.html", item1=world["inventory_one"],
                                    item2=world["inventory_two"], item3=world["inventory_three"],
@@ -123,7 +176,7 @@ def battle(world: dict, current_monster: str):
                                    current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
                                    experience=world["character_exp"], level=world["character_lvl"],
                                    current_monster=current_monster, exp=world["monster_exp_drop"],
-                                   where=where)
+                                   where=world["location"])
     else:
         atk = world["monster_atk"] - 2
         atk2 = world["monster_atk"] + 1
@@ -155,23 +208,11 @@ def attack(world: dict, current_monster: str):
 @simple_route("/heal/<current_monster>/")
 def heal(world: dict, current_monster: str):
     if world["character_current_hp"] < world["character_total_hp"]:
-        if world["inventory_one"] == "Potion":
+        if world["inventory_four"] == "Potion":
             world["character_current_hp"] = world["character_current_hp"] + 10
             if world["character_current_hp"] > world["character_total_hp"]:
                 world["character_current_hp"] = world["character_total_hp"]
-            world["inventory_one"] = "Empty"
-            return render_template("heal.html", item1=world["inventory_one"],
-                                   item2=world["inventory_two"],
-                                   item3=world["inventory_three"],
-                                   item4=world["inventory_four"], weapon=world["weapon"],
-                                   current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
-                                   experience=world["character_exp"], level=world["character_lvl"],
-                                   current_monster=current_monster)
-        elif world["inventory_two"] == "Potion":
-            world["character_current_hp"] = world["character_current_hp"] + 10
-            if world["character_current_hp"] > world["character_total_hp"]:
-                world["character_current_hp"] = world["character_total_hp"]
-            world["inventory_two"] = "Empty"
+            world["inventory_four"] = "Empty"
             return render_template("heal.html", item1=world["inventory_one"],
                                    item2=world["inventory_two"],
                                    item3=world["inventory_three"],
@@ -191,11 +232,23 @@ def heal(world: dict, current_monster: str):
                                    current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
                                    experience=world["character_exp"], level=world["character_lvl"],
                                    current_monster=current_monster)
-        elif world["inventory_four"] == "Potion":
+        elif world["inventory_two"] == "Potion":
             world["character_current_hp"] = world["character_current_hp"] + 10
             if world["character_current_hp"] > world["character_total_hp"]:
                 world["character_current_hp"] = world["character_total_hp"]
-            world["inventory_four"] = "Empty"
+            world["inventory_two"] = "Empty"
+            return render_template("heal.html", item1=world["inventory_one"],
+                                   item2=world["inventory_two"],
+                                   item3=world["inventory_three"],
+                                   item4=world["inventory_four"], weapon=world["weapon"],
+                                   current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
+                                   experience=world["character_exp"], level=world["character_lvl"],
+                                   current_monster=current_monster)
+        elif world["inventory_one"] == "Potion":
+            world["character_current_hp"] = world["character_current_hp"] + 10
+            if world["character_current_hp"] > world["character_total_hp"]:
+                world["character_current_hp"] = world["character_total_hp"]
+            world["inventory_one"] = "Empty"
             return render_template("heal.html", item1=world["inventory_one"],
                                    item2=world["inventory_two"],
                                    item3=world["inventory_three"],

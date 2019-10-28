@@ -17,9 +17,13 @@ Inventory:<br>
 ........Slot Four: {{ item4 }}<p>
 Weapon: {{ weapon }}<p>
 ************<p>
-Once the monster is defeated, you continue forward and come across a clearing in the forest. There
-    doesn't appear to be much here, save for a conspicuous wooden chest in the center of the area.<p>
-What will you do?<p>
-<a href="/chest/Potion/">Open the chest</a><br>
+Inventory full...what would you like to drop?<p>
+
+<a href="/swap/one/{{item}}/">{{ item1 }}</a><br>
+<a href="/swap/two/{{item}}/">{{ item2 }}</a><br>
+<a href="/swap/three/{{item}}/">{{ item3 }}</a><br>
+<a href="/swap/four/{{item}}/">{{ item4 }}</a><br>
+<a href="/goto/{{ where }}/">Nothing, discard {{ item }} and proceed</a><br>
+
 </body>
 </html>
