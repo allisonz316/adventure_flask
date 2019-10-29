@@ -15,8 +15,12 @@ Inventory:<br>
 ........Slot Two: {{ item2 }}<p>
 Weapon: {{ weapon }}<p>
 ************<p>
-Nothing to heal with!<p>
-    <a href="/your_turn/{{current_monster}}/">Go back</a>
+Boss encounter with {{name}}!<p>
+<img src={{image}}
+width="300" height={{height}}/><br>
+What will you do?<p>
+<a href="/first_turn/{{name}}/">Engage in Battle</a><br>
+<a href="/flee/{{name}}/">Try to Run</a><br>
 
 </body>
 </html>
