@@ -155,6 +155,13 @@ def open_door(world: dict, where: str) -> str:
 
 @simple_route("/weapon/<where>/")
 def weapon_get(world: dict, where: str):
+    """
+        Gives the player a new weapon
+
+        :param world: The current world
+        :param where: The current location
+        :return: The HTML to show the player
+        """
     new_weapon = ""
     if world["location"] == "pre Gonandarf Boss Fight":
         new_weapon = "Masterful Sword"
@@ -187,6 +194,13 @@ def weapon_get(world: dict, where: str):
 
 @simple_route("/chest/<item>/")
 def open_chest(world: dict, item: str):
+    """
+        Adds a new item to player's inventory
+
+        :param world: The current world
+        :param item: Which item is being obtained
+        :return: The HTML to show the player
+        """
     if world["location"] == "clearing":
         world["location"] = "deep forest"
     elif world["location"] == "lake":
@@ -212,6 +226,14 @@ def open_chest(world: dict, item: str):
 
 @simple_route("/swap/<slot>/<item>/")
 def item_swap(world: dict, slot: str, item: str):
+    """
+        Replaces old item in inventory with new item
+
+        :param world: The current world
+        :param slot: Which slot the new item will fill
+        :param item: Which item is being obtained
+        :return: The HTML to show the player
+        """
     if slot == "one":
         world["inventory_one"] = item
         world["location"] = "pre Gonandarf Boss Fight"
@@ -232,6 +254,13 @@ def item_swap(world: dict, slot: str, item: str):
 
 @simple_route("/your_turn/<current_monster>/")
 def your_turn(world: dict, current_monster: str):
+    """
+        Handles calculations for the player's turn in battle
+
+        :param world: The current world
+        :param current_monster: The monster the player is currently fighting
+        :return: The HTML to show the player
+        """
     if world["character_current_hp"] <= 0:
         if world["character_current_hp"] < 0:
             world["character_current_hp"] = 0
@@ -250,6 +279,13 @@ def your_turn(world: dict, current_monster: str):
 
 @simple_route("/first_turn/<current_monster>/")
 def first_turn(world: dict, current_monster: str):
+    """
+        Introduces player to battle
+
+        :param world: The current world
+        :param current_monster: The monster the player is currently fighting
+        :return: The HTML to show the player
+        """
     return render_template("first_turn.html", item1=world["inventory_one"],
                            item2=world["inventory_two"], weapon=world["weapon"],
                            current_hp=world["character_current_hp"], total_hp=world["character_total_hp"],
@@ -260,6 +296,13 @@ def first_turn(world: dict, current_monster: str):
 
 @simple_route("/battle/<current_monster>/")
 def battle(world: dict, current_monster: str):
+    """
+        Handles both battle victory calculations and monster's turn calculations
+
+        :param world: The current world
+        :param current_monster: The monster the player is currently fighting
+        :return: The HTML to show the player
+        """
     if world["monster_hp"] <= 0:
         if world["location"] == "Gonandarf Boss Fight":
             world["location"] = "endgame"
@@ -321,6 +364,13 @@ def battle(world: dict, current_monster: str):
 
 @simple_route("/attack/<current_monster>/")
 def attack(world: dict, current_monster: str):
+    """
+        Handles the player's attacking turn calculations
+
+        :param world: The current world
+        :param current_monster: The monster the player is currently fighting
+        :return: The HTML to show the player
+        """
     damage = 0
     if world["weapon"] == "Sword":
         damage = random.randrange(5, 8)
@@ -343,6 +393,13 @@ def attack(world: dict, current_monster: str):
 
 @simple_route("/heal/<current_monster>/")
 def heal(world: dict, current_monster: str):
+    """
+        Handles calculations for player's healing
+
+        :param world: The current world
+        :param current_monster: The monster the player is currently fighting
+        :return: The HTML to show the player
+        """
     if world["character_current_hp"] < world["character_total_hp"]:
         if world["inventory_two"] == "Super Potion":
             world["character_current_hp"] = world["character_current_hp"] + 30
@@ -400,6 +457,13 @@ def heal(world: dict, current_monster: str):
 
 @simple_route("/flee/<current_monster>/")
 def flee(world: dict, current_monster: str):
+    """
+        Handles player's flee chance
+
+        :param world: The current world
+        :param current_monster: The monster that the player is currently fighting
+        :return: The HTML to show the player
+        """
     flee_chance = random.randrange(1, 11)
     if flee_chance >= 7:
         return render_template("flee_success.html", item1=world["inventory_one"],
@@ -417,6 +481,13 @@ def flee(world: dict, current_monster: str):
 
 @simple_route("/boss/<where>/")
 def boss_fight(world: dict, where: str):
+    """
+        Handles boss monster creation
+
+        :param world: The current world
+        :param where: The current location
+        :return: The HTML to show the player
+        """
     current_monster = ""
     monster_hp = 0
     monster_atk = 0
@@ -469,6 +540,13 @@ def boss_fight(world: dict, where: str):
 
 @simple_route("/generate/monster/<where>/")
 def generate_monster(world: dict, where: str) -> str:
+    """
+        Handles random regular monster generation
+
+        :param world: The current world
+        :param where: The current location
+        :return: The HTML to show the player
+        """
     monster_number = random.randrange(1, 10)
     current_monster = ""
     monster_hp = 0
